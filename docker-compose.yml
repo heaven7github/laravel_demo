@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./build/Dockerfile
+      target: local
+    env_file:
+      - .env
+    ports:
+      - 8000:80
+    volumes:
+      - ./src:/var/www/html
+    healthcheck:
+      test: "curl --fail -s http://localhost:80 || exit 1"
+
+  db:
+    image: mcr.microsoft.com/mssql/server
+    env_file:
+      - .env
+    ports:
+      - 1433:1433
+    volumes:
+      - ./db-data:/var/opt/mssql/data
+    environment:
+      SA_PASSWORD: SecretPassword!10
+      ACCEPT_EULA: Y
+    restart: unless-stopped
+
+  db-mysql:
+    image: bitnami/mariadb:10.5
+    env_file:
+      - .env
+    ports:
+      - 3206:3306
+    volumes:
+      - database-data:/bitnami/mariadb
+    healthcheck:
+      test: [ 'CMD', '/opt/bitnami/scripts/mariadb/healthcheck.sh' ]
+
+volumes:
+  database-data:
+    driver: local
+  db-data:
+    driver: local
+
